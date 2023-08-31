@@ -19,7 +19,7 @@ import {
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { z } from "zod";
+import { string, z } from "zod";
 import { runningPlans } from "../libs/runningPlans";
 
 const schema = z
@@ -44,9 +44,18 @@ const schema = z
     }),
     hasCoupon: z.boolean(),
     coupon: z.string(),
-    password: z.string(),
+    password: z
+      .string()
+      .min(6, { message: "Password must contain at least 6 characters" })
+      .max(12, { message: "Password must not exceed 12 characters" }),
     confirmPassword: z.string(),
   })
+  .refine(
+    (data) => {
+      if (data.password === data.confirmPassword) return true;
+    },
+    { message: "Password does not match", path: ["confirmPassword"] }
+  )
   .refine(
     //refine let you check error in your own way
     //in this example, we check "hasCoupon" with "coupon" fields
@@ -89,12 +98,14 @@ export default function Home() {
 
     //TIP : get value of currently filled form with variable "form.values"
 
-    if (form.values.plan === "funrun") price = 500;
+    if (form.values.plan === "funrun") price += 500;
     //check the rest plans by yourself
     //TIP : check /src/app/libs/runningPlans.js
-
+    if (form.values.plan === "mini") price += 800;
+    if (form.values.plan === "half") price += 1200;
+    if (form.values.plan === "full") price += 1500;
     //check discount here
-
+    if (form.values.coupon === "CMU2023") price *= 0.7;
     return price;
   };
 
